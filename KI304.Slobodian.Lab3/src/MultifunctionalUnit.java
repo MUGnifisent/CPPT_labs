@@ -1,26 +1,28 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
-/**
-* Class <code>Printer</code> implements the printer
-*/
-public class Printer {
-    private Ink ink;
-    private InternetAdapter internetAdapter;
-    private PaperTray paperTray;
 
-    private PrintWriter file;
+public class MultifunctionalUnit extends Printer implements PowerSource{
 
-    public boolean isEnabled;
+    enum PowerSource {
+        INTERNAL, EXTERNAL
+    };
+
+   private PowerSource powerSource;
+   private boolean paperJammed;
+
     /**
     * Constructor
     */
-    public Printer() throws FileNotFoundException{
+    public MultifunctionalUnit() throws FileNotFoundException{
         this.ink = new Ink();
         this.internetAdapter = new InternetAdapter();
         this.paperTray = new PaperTray();
 
         this.isEnabled = false;
+
+        this.powerSource = PowerSource.EXTERNAL;
+        this.paperJammed = false;
 
         this.file = new PrintWriter(new File("Log.txt"));
     }
@@ -37,13 +39,22 @@ public class Printer {
     *@param <code>ptIndex</code> index of the paper type
     *@param <code>pAmount</code> amount of paper in the tray
     *@param <code>maxPAmount</code> maximal amount of paper in the tray
+    *@param <code>psIsInternal</code> bool, true if power source is internal
+    *@param <code>paperJ</code> bool, true if paper is jammed
     */
-    public Printer(float redP, float greenP, float blueP, int CType, boolean IsC, int CStrength, String ssid, String pass, int ptIndex, int pAmount, int maxPAmount) throws FileNotFoundException{
+    public MultifunctionalUnit(float redP, float greenP, float blueP, int CType, boolean IsC, int CStrength, String ssid, String pass, int ptIndex, int pAmount, int maxPAmount, boolean psIsInternal, boolean paperJ) throws FileNotFoundException{
         this.ink = new Ink(redP, greenP, blueP);
         this.internetAdapter = new InternetAdapter(CType, IsC, CStrength, ssid, pass);
         this.paperTray = new PaperTray(ptIndex, pAmount, maxPAmount);
 
         this.isEnabled = false;
+
+        if (psIsInternal == false){
+            this.powerSource = PowerSource.EXTERNAL;
+        }else{
+            this.powerSource = PowerSource.INTERNAL;
+        }
+        this.paperJammed = paperJ;
 
         this.file = new PrintWriter(new File("Log.txt"));
     }
@@ -53,7 +64,7 @@ public class Printer {
     public void turnOn() {
         isEnabled = true;
 
-        file.println("You succesfully turned your printeron. Great job, champ!");
+        file.println("You succesfully turned your printer on. Great job, champ!");
         file.println();
         file.flush();
     }
@@ -171,17 +182,21 @@ public class Printer {
     public void printViaInternet(int sheets){
         file.println("You decided to try to print some papers on your printer via the internet.");
         file.println("...");
-        if(internetAdapter.checkIfConnected()){
-            if(paperTray.checkPaperAmount() < sheets || ink.checkRedInkLevel() < sheets || ink.checkGreenInkLevel() < sheets || ink.checkBlueInkLevel() < sheets){
-                file.println("You failed! Your printer dont have something!");
+        if (paperJammed == false) {
+            if(internetAdapter.checkIfConnected()){
+                if(paperTray.checkPaperAmount() < sheets || ink.checkRedInkLevel() < sheets || ink. checkGreenInkLevel() < sheets || ink.checkBlueInkLevel() < sheets){
+                    file.println("You failed! Your printer dont have something!");
+                }
+                else{
+                    file.println("Your prints came out nice.");
+                    file.println(paperTray.changePaperAmount(-sheets));
+                }
             }
             else{
-                file.println("Your prints came out nice.");
-                file.println(paperTray.changePaperAmount(-sheets));
+               file.println("You failed! Your printer is not connected to da internet!"); 
             }
-        }
-        else{
-           file.println("You failed! Your printer is not connected to da internet!"); 
+        }else{
+            file.println("You failed! Your printer is jammed!");
         }
         file.println();
         file.flush();
@@ -193,18 +208,84 @@ public class Printer {
     public void printViaFlsh(int sheets){
         file.println("You decided to try to print some papers on your printer via Flash drive.");
         file.println("...");
-        if(paperTray.checkPaperAmount() < sheets || ink.checkRedInkLevel() < sheets || ink.checkGreenInkLevel() < sheets || ink.checkBlueInkLevel() < sheets){
-            file.println("You failed! Your printer dont have something!");
-        }
-        else{
-            file.println("Your prints came out nice.");
-            file.println(paperTray.changePaperAmount(-sheets));
+        if (paperJammed == false) {
+            if(paperTray.checkPaperAmount() < sheets || ink.checkRedInkLevel() < sheets || ink. checkGreenInkLevel() < sheets || ink.checkBlueInkLevel() < sheets){
+                file.println("You failed! Your printer dont have something!");
+            }
+            else{
+                file.println("Your prints came out nice.");
+                file.println(paperTray.changePaperAmount(-sheets));
+            }
+        }else{
+            file.println("You failed! Your printer is jammed!");
         }
         file.println();
         file.flush();
     }
+    /**
+    * Method releases used recourses
+    */
     public void dispose() {
         file.close();
     }
+    /**
+	* Method gets information about power source of the printer
+	*/
+    public void getPowerSource(){
+        file.println("Yor printer for now is conected to " + this.powerSource + "power source.");
+        file.println();
+        file.flush();
+    }
+    /**
+	* Method gets information about state of the printer (if it jammed)
+	*/
+    public void getJamInfo(){
+        if (this.paperJammed == true){
+            file.println("Your printer is jammed.");
+        }else{
+            file.println("Your printer is not jammed.");
+        }
+        file.println();
+        file.flush();
+    }
+    /**
+    * Method changes power source of the printer
+    */
+    public void changePowerSource(){
+        if (this.powerSource == PowerSource.INTERNAL){
+            this.powerSource = PowerSource.EXTERNAL;
+            file.println("Your printer is now powered from wall plug!");
+        }else if (this.powerSource == PowerSource.EXTERNAL){
+            this.powerSource = PowerSource.INTERNAL;
+            file.println("Your printer is now powered from its internal battery!");
+        }
+        file.println();
+        file.flush();
+    }
+    /**
+    * Method jams the printer with paper
+    */
+    public void JAMDAPAPER(){
+        if (this.paperJammed == false){
+            this.paperJammed = true;
+            file.println("You intentionally jammed your printer! WTF!");
+        }else{
+            file.println("You tried to intentionally jam your printer...\nBut it was already jammed.\nReally??");
+        }
+        file.println();
+        file.flush();
+    }
+    /**
+    * Method un-jams the printer
+    */
+    public void UNJAMDAPAPER(){
+        if (this.paperJammed == true){
+            this.paperJammed = false;
+            file.println("You successfully un-jammed your printer!");
+        }else{
+            file.println("You tried to intentionally un-jam your printer...\nBut it was already perfectly fine.\nAre you on drugs??");
+        }
+        file.println();
+        file.flush();
+    }
 }
-
