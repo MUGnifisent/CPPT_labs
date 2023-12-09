@@ -1,44 +1,63 @@
-#Окремий модуль що містить скрипт створення зубчастого масиву
-def execute():
-    size = int(input("Enter the size of the square matrix: "))
-    filler = input("\nEnter the filler symbol: ")
+import os
+import struct
+import math
 
-    with open("arr.txt", "w") as fout:
-        arr = [[' ' for _ in range(size)] for _ in range(size)]
+# функція запису результату в текстовий файл
+def writeResTxt(fName, result):
+    with open(fName, 'w') as f:
+        f.write(str(result))
 
-        if len(filler) == 0:
-            print("\nNo filler detected")
-        elif len(filler) == 1:
-            if size % 2 == 0:
-                temp = 2
-                for i in range(size // 2):
-                    if temp < size:
-                        arr[i] = [' ' for _ in range(temp)]
-                        arr[size - i - 1] = [' ' for _ in range(temp)]
-                        temp += 2
-                    elif temp == size:
-                        arr[i] = [' ' for _ in range(temp)]
-                        arr[i + 1] = [' ' for _ in range(temp)]
-            else:
-                temp = 1
-                for i in range((size - 1) // 2):
-                    arr[i] = [' ' for _ in range(temp)]
-                    arr[size - i - 1] = [' ' for _ in range(temp)]
-                    temp += 2
-                arr[(size - 1) // 2] = [' ' for _ in range(size)]
-
-            for i in range(size):
-                sub_len = len(arr[i])
-                for _ in range(size - sub_len):
-                    print(" ", end='')
-                    fout.write(" ")
-                for j in range(sub_len):
-                    arr[i][j] = filler[0]
-                    print(arr[i][j], end=' ')
-                    fout.write(arr[i][j] + " ")
-                print()
-                fout.write("\n")
+# функція читання результату з текстового файлу
+def readResTxt(fName):
+    result = 0.0
+    try:
+        if os.path.exists(fName):
+            with open(fName, 'r') as f:
+                result = f.read()
         else:
-            print("\nToo many fillers detected")
+            raise FileNotFoundError(f"File {fName} not found.")
+    except FileNotFoundError as e:
+        print(e)
+    return result
 
-        fout.flush()
+# функція запису результату в бінарний файл
+def writeResBin(fName, result):
+    with open(fName, 'wb') as f:
+        f.write(struct.pack('f', result))
+
+# функція читання результату з бінарного файлу
+def readResBin(fName):
+    result = 0.0
+    try:
+        if os.path.exists(fName):
+            with open(fName, 'rb') as f:
+                result = struct.unpack('f', f.read())[0]
+        else:
+            raise FileNotFoundError(f"File {fName} not found.")
+    except FileNotFoundError as e:
+        print(e)
+    return result
+
+# функція обчислення заданого виразу (з обробкою можливих помилок)
+def calculate(x):
+    res = 0
+    try:
+        res = (math.cos(math.radians(x))/math.sin(math.radians(x)))/(math.sin(2*math.radians(x)) + 4 * math.cos(math.radians(x)));
+    except ValueError as e:
+        print(e)
+    except ZeroDivisionError as e:
+        print(e)
+
+    return res
+
+def execute():
+    data = float(input("Enter data: "))
+    result = calculate(data)
+    print(f"Result is: {result}")
+    try:
+        writeResTxt("textRes.txt", result)
+        writeResBin("binRes.bin", result)
+        print("Result bin is: {0}".format(readResBin("binRes.bin")))
+        print("Result txt is: {0}".format(readResTxt("textRes.txt")))
+    except FileNotFoundError as e:
+        print (e)
