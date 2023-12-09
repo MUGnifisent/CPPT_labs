@@ -6,7 +6,6 @@
  * @author Yaroslav Slobodian
  * @version 1.0
  */
-
 public class Equations {
 
     /**
@@ -20,7 +19,9 @@ public class Equations {
         rad = x * Math.PI / 180.0;
         try {
             y = (Math.cos(rad)/Math.sin(rad))/(Math.sin(2*rad) + 4 * Math.cos(rad));
-            if (y == Double.NaN || y == Double.NEGATIVE_INFINITY || y == Double.POSITIVE_INFINITY || x == 90 || x == -90) throw new ArithmeticException();
+            if (y == Double.NaN || y == Double.NEGATIVE_INFINITY || y == Double.POSITIVE_INFINITY || x == 90
+                    || x == -90)
+                throw new ArithmeticException();
         } catch (ArithmeticException ex) {
             if (rad == Math.PI / 2.0 || rad == -Math.PI / 2.0)
                 throw new CalcException("Exception reason: Illegal value of X for tangent calculation");
